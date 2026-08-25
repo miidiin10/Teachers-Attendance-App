@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 
+export const dynamic = "force-dynamic";
+
 function checkAdmin(req) {
   const pw = req.headers.get("x-admin-password");
   return pw && pw === process.env.ADMIN_PASSWORD;

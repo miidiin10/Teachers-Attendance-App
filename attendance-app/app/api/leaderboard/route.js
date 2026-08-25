@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 import { todayInLagos, currentMonthInLagos, formatTimeInLagos, minutesSinceMidnightLagos } from "../../../lib/dates";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const type = searchParams.get("type") || "daily";

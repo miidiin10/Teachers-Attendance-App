@@ -22,8 +22,11 @@ export default function AdminPage() {
       const data = await res.json();
       setTeachers(data.teachers);
       loadCheckins(pw);
-    } else {
+    } else if (res.status === 401) {
       setError("Wrong password.");
+    } else {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || `Something went wrong (error ${res.status}). Check server logs.`);
     }
   }
 

@@ -8,18 +8,25 @@ earliest-arrival days, tie broken by the earliest average check-in time).
 ## How it works
 
 - **/checkin** - public page linked from the printed QR code. Teacher picks
-  their name and enters a 4-digit PIN. The server (not the phone) stamps
-  the time, so nobody can fake an earlier arrival by changing their clock.
-  Each teacher can only check in once per day.
+  their name, enters a 4-digit PIN, and takes a selfie - the photo is
+  required, so someone can't check in on a colleague's behalf just because
+  they know the PIN. The server (not the phone) stamps the time, so nobody
+  can fake an earlier arrival by changing their clock. Each teacher can
+  only check in once per day. If you set `SCHOOL_LAT`/`SCHOOL_LNG`, the
+  phone's GPS is also checked, so check-in only works from the school
+  itself (stops someone screenshotting the QR code and sending it to a
+  colleague who isn't there yet).
 - **/leaderboard** - public page, "Today" and "This Month" tabs.
-- **/admin** - password-protected page to add/remove teachers and print the
-  QR code. No real login system - just a shared password, kept light.
+- **/admin** - password-protected page to add/remove teachers, print the
+  QR code, and review today's check-in selfies to spot-check anything that
+  looks off. No real login system - just a shared password, kept light.
 
 ## 1. Set up Supabase (free tier is enough)
 
 1. Go to supabase.com, create a project.
 2. Open **SQL Editor** > New query, paste the contents of
-   `supabase/schema.sql`, and run it.
+   `supabase/schema.sql`, and run it. This also creates a private
+   `checkin-photos` storage bucket for the selfies.
 3. Go to **Settings > API** and copy the **Project URL** and the
    **service_role key** (not the anon key - the service role key is used
    server-side only and must never be exposed to the browser).
@@ -32,7 +39,17 @@ earliest-arrival days, tie broken by the earliest average check-in time).
    - `SUPABASE_URL`
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `ADMIN_PASSWORD` (pick anything - this guards the /admin page)
+   - `SCHOOL_LAT` / `SCHOOL_LNG` (optional - see below)
 4. Deploy. Vercel will give you a URL like `your-app.vercel.app`.
+   The site runs on HTTPS automatically, which is required for camera and
+   location access to work on phones.
+
+### Optional: lock check-ins to the school's location
+
+Find your school's coordinates (right-click it on Google Maps > the lat/lng
+shown at the top) and set `SCHOOL_LAT`, `SCHOOL_LNG`, and optionally
+`SCHOOL_RADIUS_METERS` (default 150m). Leave them blank to skip this check
+entirely.
 
 ## 3. Set up your teachers
 
@@ -63,6 +80,11 @@ npm run dev
   tool, but don't reuse a PIN teachers use elsewhere.
 - Times are always computed in Africa/Lagos time regardless of device
   timezone.
+- Selfies are stored in a private Supabase bucket and only ever shown to
+  admins via short-lived signed links (10 minutes) - they're never public.
+- Camera and location permissions must be granted in the phone's browser.
+  If a teacher blocks the camera permission by mistake, they can re-enable
+  it in their browser's site settings for your app's URL.
 - If a teacher forgets their PIN, an admin can just remove and re-add them
   (attendance history is tied to the old record and will be deleted with
   it) - or you can add a "reset PIN" feature later if that comes up often.

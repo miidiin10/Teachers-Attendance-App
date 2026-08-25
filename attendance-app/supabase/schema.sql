@@ -15,6 +15,9 @@ create table if not exists attendance (
   teacher_id uuid not null references teachers(id) on delete cascade,
   checkin_time timestamptz not null default now(),  -- exact server timestamp
   checkin_date date not null,                        -- Lagos calendar date, set by the app
+  photo_path text,                                    -- selfie taken at check-in, for audit
+  lat double precision,                               -- GPS at check-in, if geofencing is on
+  lng double precision,
   created_at timestamptz not null default now(),
   unique (teacher_id, checkin_date)                  -- one check-in per teacher per day
 );
@@ -26,3 +29,9 @@ create index if not exists idx_attendance_date on attendance (checkin_date);
 -- role key, so no policies need to be opened up.
 alter table teachers enable row level security;
 alter table attendance enable row level security;
+
+-- Private storage bucket for check-in selfies. Kept private (not public) -
+-- only the admin page can view photos, via short-lived signed URLs.
+insert into storage.buckets (id, name, public)
+values ('checkin-photos', 'checkin-photos', false)
+on conflict (id) do nothing;
