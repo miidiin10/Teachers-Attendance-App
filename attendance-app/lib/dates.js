@@ -32,3 +32,13 @@ export function minutesSinceMidnightLagos(isoString) {
   const [h, m, s] = parts.split(":").map(Number);
   return h * 60 + m + s / 60;
 }
+
+// "HH:MM" -> minutes since midnight. Used for the school-hours window.
+export function parseHHMM(str) {
+  const [h, m] = str.split(":").map(Number);
+  return h * 60 + (m || 0);
+}
+
+export function currentMinutesInLagos() {
+  return minutesSinceMidnightLagos(new Date().toISOString());
+}

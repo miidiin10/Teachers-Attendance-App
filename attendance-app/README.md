@@ -62,6 +62,30 @@ of the URL, not deliberate sharing. If you ever suspect the link has
 leaked, just change `CHECKIN_ACCESS_KEY` to a new value, redeploy, and
 reprint the QR code from `/admin` - the old link stops working instantly.
 
+### Optional: PIN lockout
+
+After `PIN_LOCKOUT_ATTEMPTS` wrong PINs (default 5), a teacher is locked
+out for `PIN_LOCKOUT_MINUTES` (default 10) - protects against someone
+guessing a 4-digit PIN by brute force. If a teacher gets locked out
+legitimately (forgot their PIN), you don't have to wait it out - go to
+`/admin`, find them in the teacher list, and click "Unlock".
+
+### Optional: restrict check-in to school hours
+
+Set `CHECKIN_OPEN_TIME` and `CHECKIN_CLOSE_TIME` (24-hour format, Lagos
+time - e.g. `05:00` and `11:00`). Outside that window, check-in is
+refused entirely, regardless of PIN, location, or the QR key. Leave both
+blank to allow check-in at any time.
+
+### Branding
+
+`NEXT_PUBLIC_SCHOOL_NAME` and `NEXT_PUBLIC_LOGO_URL` control the name and
+logo shown at the top of every page. If you don't set a logo URL, a plain
+circle with the school's initials is shown instead - once you have a
+logo image, host it anywhere (e.g. upload it to your Supabase project's
+storage, or any image host) and paste the direct image URL into
+`NEXT_PUBLIC_LOGO_URL`, then redeploy.
+
 ### Optional: lock check-ins to specific locations
 
 You can allow check-in from more than one place - useful for multiple

@@ -10,6 +10,7 @@ export default function CheckinPage() {
 
   const [coords, setCoords] = useState(null);
   const [locError, setLocError] = useState("");
+  const [deviceId, setDeviceId] = useState(null);
 
   useEffect(() => {
     fetch("/api/teachers/public")
@@ -22,6 +23,22 @@ export default function CheckinPage() {
         () => setLocError("Location unavailable - allow location access if check-in fails."),
         { enableHighAccuracy: true, timeout: 8000 }
       );
+    }
+
+    // Persistent per-browser id, used to enforce one device per day.
+    try {
+      let id = localStorage.getItem("attendance_device_id");
+      if (!id) {
+        id = crypto.randomUUID
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        localStorage.setItem("attendance_device_id", id);
+      }
+      setDeviceId(id);
+    } catch (err) {
+      // Private browsing / storage blocked - check-in still works, it just
+      // won't be covered by the one-device-per-day check.
+      setDeviceId(null);
     }
   }, []);
 
@@ -38,6 +55,7 @@ export default function CheckinPage() {
           pin,
           lat: coords?.lat,
           lng: coords?.lng,
+          deviceId,
         }),
       });
       const data = await res.json();

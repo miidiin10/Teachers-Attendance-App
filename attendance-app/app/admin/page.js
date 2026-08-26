@@ -82,6 +82,15 @@ export default function AdminPage() {
     refresh();
   }
 
+  async function unlockTeacher(id) {
+    await fetch("/api/teachers", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", "x-admin-password": pw },
+      body: JSON.stringify({ id }),
+    });
+    refresh();
+  }
+
   if (!authed) {
     return (
       <main className="pt-16">
@@ -166,17 +175,32 @@ export default function AdminPage() {
 
       <div className="bg-white rounded-xl shadow-sm divide-y">
         <p className="p-4 font-medium text-sm text-slate-600">Teachers ({teachers.length})</p>
-        {teachers.map((t) => (
-          <div key={t.id} className="flex items-center justify-between p-4">
-            <div>
-              <p className="font-medium">{t.name}</p>
-              <p className="text-xs text-slate-400">PIN {t.pin}</p>
+        {teachers.map((t) => {
+          const isLocked = t.locked_until && new Date(t.locked_until) > new Date();
+          return (
+            <div key={t.id} className="flex items-center justify-between p-4">
+              <div>
+                <p className="font-medium">{t.name}</p>
+                <p className="text-xs text-slate-400">PIN {t.pin}</p>
+                {isLocked && (
+                  <p className="text-xs text-red-600 mt-0.5">
+                    Locked until {new Date(t.locked_until).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                {isLocked && (
+                  <button onClick={() => unlockTeacher(t.id)} className="text-amber-600 text-sm">
+                    Unlock
+                  </button>
+                )}
+                <button onClick={() => removeTeacher(t.id)} className="text-red-600 text-sm">
+                  Remove
+                </button>
+              </div>
             </div>
-            <button onClick={() => removeTeacher(t.id)} className="text-red-600 text-sm">
-              Remove
-            </button>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </main>
   );
