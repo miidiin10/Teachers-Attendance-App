@@ -3,6 +3,17 @@
 export default function Header() {
   const schoolName = process.env.NEXT_PUBLIC_SCHOOL_NAME || "Al-Asaas Schools";
   const logoUrl = process.env.NEXT_PUBLIC_LOGO_URL;
+
+  // The full-width Banner component already shows the logo image edge to
+  // edge above this - avoid showing it twice, just show the name here.
+  if (logoUrl) {
+    return (
+      <div className="pt-3 pb-4">
+        <span className="font-semibold text-slate-700">{schoolName}</span>
+      </div>
+    );
+  }
+
   const initials = schoolName
     .split(" ")
     .filter(Boolean)
@@ -13,18 +24,9 @@ export default function Header() {
 
   return (
     <div className="flex items-center gap-3 pb-4">
-      {logoUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={logoUrl}
-          alt={`${schoolName} logo`}
-          className="h-10 w-10 rounded-full object-cover border border-slate-200"
-        />
-      ) : (
-        <div className="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-bold text-sm shrink-0">
-          {initials || "A"}
-        </div>
-      )}
+      <div className="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-bold text-sm shrink-0">
+        {initials || "A"}
+      </div>
       <span className="font-semibold text-slate-700">{schoolName}</span>
     </div>
   );
