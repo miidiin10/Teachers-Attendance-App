@@ -41,12 +41,26 @@ earliest-arrival days, tie broken by the earliest average check-in time).
    The site runs on HTTPS automatically, which is required for camera and
    location access to work on phones.
 
-### Optional: lock check-ins to the school's location
+### Optional: lock check-ins to specific locations
 
-Find your school's coordinates (right-click it on Google Maps > the lat/lng
-shown at the top) and set `SCHOOL_LAT`, `SCHOOL_LNG`, and optionally
-`SCHOOL_RADIUS_METERS` (default 150m). Leave them blank to skip this check
-entirely.
+You can allow check-in from more than one place - useful for multiple
+buildings, a large campus where one circle doesn't cover it, or a school
+with a car park teachers arrive through.
+
+Set a single environment variable, `SCHOOL_ZONES`, to a JSON list of
+locations. Each needs a name, latitude, longitude, and a radius in meters:
+
+```
+SCHOOL_ZONES=[{"name":"Main Campus","lat":6.5244,"lng":3.3792,"radius":150},{"name":"Annex","lat":6.5300,"lng":3.3800,"radius":100}]
+```
+
+To find coordinates: open Google Maps, right-click the spot, and the
+lat/lng shown at the top is what you paste in.
+
+A teacher's check-in succeeds if their phone's GPS falls inside *any* of
+the listed zones. If you only need one location, you can instead set
+`SCHOOL_LAT` / `SCHOOL_LNG` / `SCHOOL_RADIUS_METERS` and skip the JSON.
+Leave all of these blank to disable location checking entirely.
 
 ## 3. Set up your teachers
 

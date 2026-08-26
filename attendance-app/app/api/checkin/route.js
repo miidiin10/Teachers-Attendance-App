@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 import { todayInLagos, formatTimeInLagos } from "../../../lib/dates";
-import { distanceMeters } from "../../../lib/geo";
+import { getSchoolZones, isWithinAnyZone } from "../../../lib/geofence";
 
 export async function POST(req) {
   try {
@@ -26,21 +26,19 @@ export async function POST(req) {
       return NextResponse.json({ error: "Incorrect PIN." }, { status: 401 });
     }
 
-    // Optional geofence - only enforced if the school's coordinates are configured.
-    const schoolLat = process.env.SCHOOL_LAT;
-    const schoolLng = process.env.SCHOOL_LNG;
-    if (schoolLat && schoolLng) {
+    // Optional geofence - only enforced if at least one zone is configured.
+    const zones = getSchoolZones();
+    if (zones.length > 0) {
       if (typeof lat !== "number" || typeof lng !== "number") {
         return NextResponse.json(
           { error: "Location is required to check in. Please allow location access and try again." },
           { status: 400 }
         );
       }
-      const radius = Number(process.env.SCHOOL_RADIUS_METERS) || 150;
-      const dist = distanceMeters(Number(schoolLat), Number(schoolLng), lat, lng);
-      if (dist > radius) {
+      const result = isWithinAnyZone(lat, lng, zones);
+      if (!result.ok) {
         return NextResponse.json(
-          { error: "You don't appear to be at school. Check in once you arrive." },
+          { error: "You don't appear to be at an approved check-in location." },
           { status: 403 }
         );
       }
@@ -91,6 +89,9 @@ export async function POST(req) {
     });
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: "Something went wrong. Try again." }, { status: 500 });
+    return NextResponse.json(
+      { error: `Something went wrong: ${err.message || "unknown error"}. Try again.` },
+      { status: 500 }
+    );
   }
 }
