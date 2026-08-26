@@ -17,5 +17,9 @@ export async function GET() {
     .order("name", { ascending: true });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ teachers: data });
+
+  return NextResponse.json(
+    { teachers: data },
+    { headers: { "Cache-Control": "no-store, max-age=0" } }
+  );
 }
