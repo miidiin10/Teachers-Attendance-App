@@ -29,9 +29,3 @@ create index if not exists idx_attendance_date on attendance (checkin_date);
 -- role key, so no policies need to be opened up.
 alter table teachers enable row level security;
 alter table attendance enable row level security;
-
--- Private storage bucket for check-in selfies. Kept private (not public) -
--- only the admin page can view photos, via short-lived signed URLs.
-insert into storage.buckets (id, name, public)
-values ('checkin-photos', 'checkin-photos', false)
-on conflict (id) do nothing;

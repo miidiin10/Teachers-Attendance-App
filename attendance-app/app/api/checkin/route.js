@@ -5,12 +5,25 @@ import { distanceMeters } from "../../../lib/geo";
 
 export async function POST(req) {
   try {
-    const { teacherId, pin, photoDataUrl, lat, lng } = await req.json();
+    const { teacherId, pin, lat, lng } = await req.json();
     if (!teacherId || !pin) {
       return NextResponse.json({ error: "Missing teacher or PIN." }, { status: 400 });
     }
-    if (!photoDataUrl) {
-      return NextResponse.json({ error: "A selfie is required to check in." }, { status: 400 });
+
+    const { data: teacher, error: teacherErr } = await supabaseAdmin
+      .from("teachers")
+      .select("id, name, pin, active")
+      .eq("id", teacherId)
+      .single();
+
+    if (teacherErr || !teacher) {
+      return NextResponse.json({ error: "Teacher not found." }, { status: 404 });
+    }
+    if (!teacher.active) {
+      return NextResponse.json({ error: "This teacher profile is inactive." }, { status: 403 });
+    }
+    if (String(teacher.pin) !== String(pin)) {
+      return NextResponse.json({ error: "Incorrect PIN." }, { status: 401 });
     }
 
     // Optional geofence - only enforced if the school's coordinates are configured.
@@ -33,45 +46,13 @@ export async function POST(req) {
       }
     }
 
-    const { data: teacher, error: teacherErr } = await supabaseAdmin
-      .from("teachers")
-      .select("id, name, pin, active")
-      .eq("id", teacherId)
-      .single();
-
-    if (teacherErr || !teacher) {
-      return NextResponse.json({ error: "Teacher not found." }, { status: 404 });
-    }
-    if (!teacher.active) {
-      return NextResponse.json({ error: "This teacher profile is inactive." }, { status: 403 });
-    }
-    if (String(teacher.pin) !== String(pin)) {
-      return NextResponse.json({ error: "Incorrect PIN." }, { status: 401 });
-    }
-
     const date = todayInLagos();
-
-    // Upload the selfie first so a failed upload doesn't leave a check-in
-    // row with no photo.
-    const base64 = photoDataUrl.split(",")[1];
-    if (!base64) {
-      return NextResponse.json({ error: "Invalid photo. Try again." }, { status: 400 });
-    }
-    const photoPath = `${date}/${teacher.id}-${Date.now()}.jpg`;
-    const { error: uploadErr } = await supabaseAdmin.storage
-      .from("checkin-photos")
-      .upload(photoPath, Buffer.from(base64, "base64"), { contentType: "image/jpeg" });
-    if (uploadErr) {
-      console.error(uploadErr);
-      return NextResponse.json({ error: "Could not save your selfie. Try again." }, { status: 500 });
-    }
 
     const { data: inserted, error: insertErr } = await supabaseAdmin
       .from("attendance")
       .insert({
         teacher_id: teacher.id,
         checkin_date: date,
-        photo_path: photoPath,
         lat: typeof lat === "number" ? lat : null,
         lng: typeof lng === "number" ? lng : null,
       })

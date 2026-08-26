@@ -144,29 +144,20 @@ export default function AdminPage() {
       </form>
 
       <div className="bg-white rounded-xl shadow-sm divide-y">
-        <p className="p-4 font-medium text-sm text-slate-600">
-          Today's check-ins - tap a name to verify their selfie
-        </p>
+        <p className="p-4 font-medium text-sm text-slate-600">Today's check-ins</p>
         {checkins.length === 0 && (
           <p className="p-4 text-sm text-slate-400">No check-ins yet today.</p>
         )}
         {checkins.map((c, i) => (
-          <details key={i} className="p-4">
-            <summary className="flex items-center justify-between cursor-pointer">
-              <span className="font-medium">{c.name}</span>
-              <span className="text-sm text-slate-500">{c.time}</span>
-            </summary>
-            <div className="pt-3 space-y-1">
-              {c.photoUrl ? (
-                <img src={c.photoUrl} alt={`${c.name} selfie`} className="rounded-lg w-40" />
-              ) : (
-                <p className="text-xs text-slate-400">No photo on file.</p>
-              )}
+          <div key={i} className="flex items-center justify-between p-4">
+            <span className="font-medium">{c.name}</span>
+            <div className="text-right">
+              <p className="text-sm text-slate-500">{c.time}</p>
               <p className="text-xs text-slate-400">
                 {c.hasLocation ? "Location recorded" : "No location recorded"}
               </p>
             </div>
-          </details>
+          </div>
         ))}
       </div>
 
