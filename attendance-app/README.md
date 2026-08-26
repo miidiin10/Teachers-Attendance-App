@@ -41,6 +41,27 @@ earliest-arrival days, tie broken by the earliest average check-in time).
    The site runs on HTTPS automatically, which is required for camera and
    location access to work on phones.
 
+### Optional: make /checkin only reachable via the QR code
+
+By default, anyone who learns the `/checkin` URL can type it directly,
+without ever scanning the code. To stop that:
+
+1. Pick any long random string (e.g. generate one at
+   [randomkeygen.com](https://randomkeygen.com) or just mash your keyboard).
+2. Set it as `CHECKIN_ACCESS_KEY` in Vercel's environment variables, and
+   redeploy.
+3. Log into `/admin` - the QR code shown there now automatically bakes
+   this key into the link, so it only works when scanned from that QR
+   code. Visiting `/checkin` without the key shows a "please scan the QR
+   code" message instead of the form.
+
+One honest limitation: once someone scans it, the full link (key
+included) appears in their phone's browser address bar, so a determined
+person could still copy and forward it. This stops casual guessing/typing
+of the URL, not deliberate sharing. If you ever suspect the link has
+leaked, just change `CHECKIN_ACCESS_KEY` to a new value, redeploy, and
+reprint the QR code from `/admin` - the old link stops working instantly.
+
 ### Optional: lock check-ins to specific locations
 
 You can allow check-in from more than one place - useful for multiple

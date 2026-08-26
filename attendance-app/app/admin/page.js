@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import QRCode from "qrcode";
 
 export default function AdminPage() {
@@ -22,6 +22,7 @@ export default function AdminPage() {
       const data = await res.json();
       setTeachers(data.teachers);
       loadCheckins(pw);
+      loadQr(pw);
     } else if (res.status === 401) {
       setError("Wrong password.");
     } else {
@@ -38,12 +39,14 @@ export default function AdminPage() {
     }
   }
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const checkinUrl = `${window.location.origin}/checkin`;
-      QRCode.toDataURL(checkinUrl, { width: 240 }).then(setQrUrl);
+  async function loadQr(password) {
+    const res = await fetch("/api/admin/checkin-link", { headers: { "x-admin-password": password } });
+    if (res.ok) {
+      const { url } = await res.json();
+      const dataUrl = await QRCode.toDataURL(url, { width: 240 });
+      setQrUrl(dataUrl);
     }
-  }, []);
+  }
 
   async function refresh() {
     const res = await fetch("/api/teachers", { headers: { "x-admin-password": pw } });
