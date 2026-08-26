@@ -1,5 +1,6 @@
 import "./globals.css";
 import Header from "../components/Header";
+import BrandBadge from "../components/BrandBadge";
 
 export const metadata = {
   title: "Teacher Attendance",
@@ -14,6 +15,7 @@ export default function RootLayout({ children }) {
           <Header />
           {children}
         </div>
+        <BrandBadge />
       </body>
     </html>
   );
