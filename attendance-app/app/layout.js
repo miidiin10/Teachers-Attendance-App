@@ -1,6 +1,5 @@
 import "./globals.css";
 import Header from "../components/Header";
-import Banner from "../components/Banner";
 import BrandBadge from "../components/BrandBadge";
 
 export const metadata = {
@@ -12,7 +11,6 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className="min-h-screen text-slate-900">
-        <Banner />
         <div className="max-w-md mx-auto p-4">
           <Header />
           {children}

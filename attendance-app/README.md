@@ -79,12 +79,12 @@ blank to allow check-in at any time.
 
 ### Branding
 
-`NEXT_PUBLIC_SCHOOL_NAME` and `NEXT_PUBLIC_LOGO_URL` control the name and
-logo shown at the top of every page. If you don't set a logo URL, a plain
-circle with the school's initials is shown instead - once you have a
-logo image, host it anywhere (e.g. upload it to your Supabase project's
-storage, or any image host) and paste the direct image URL into
-`NEXT_PUBLIC_LOGO_URL`, then redeploy.
+The Al-Asaas Schools logo is bundled at `public/logo.jpg` and shows
+centered at the top of every page by default - no configuration needed.
+To swap it for a different image later, either replace that file directly
+in the repo, or set `NEXT_PUBLIC_LOGO_URL` to a direct image link to
+override it without touching code. `NEXT_PUBLIC_SCHOOL_NAME` is used for
+the image's alt text.
 
 ### Optional: lock check-ins to specific locations
 
