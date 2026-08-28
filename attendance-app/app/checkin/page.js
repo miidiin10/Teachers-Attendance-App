@@ -48,7 +48,8 @@ export default function CheckinPage() {
     setStatus(null);
     setLoading(true);
     try {
-      const res = await fetch("/api/checkin", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/teachers`, { 
+
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -56,6 +57,7 @@ export default function CheckinPage() {
           pin,
           lat: coords?.lat,
           lng: coords?.lng,
+          cache: 'no-store' // 👈 Ensures the component always gets fresh data
           deviceId,
         }),
       });
