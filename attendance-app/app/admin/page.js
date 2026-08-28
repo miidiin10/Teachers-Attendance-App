@@ -128,7 +128,9 @@ export default function AdminPage() {
       <div className="bg-white rounded-xl p-5 shadow-sm text-center space-y-2">
         <p className="font-medium text-sm text-slate-600">Check-in QR code</p>
         {qrUrl && <img src={qrUrl} alt="Check-in QR code" className="mx-auto" />}
-        <p className="text-xs text-slate-400">Print this and put it at the entrance.</p>
+        <p className="text-[10px] text-slate-400 italic whitespace-nowrap">
+          made by meedev _hmd.dtl@gmail.com(08067265806)
+        </p>
       </div>
 
       <form onSubmit={addTeacher} className="bg-white rounded-xl p-5 shadow-sm space-y-3">
