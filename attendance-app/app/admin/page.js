@@ -130,7 +130,7 @@ export default function AdminPage() {
         <p className="font-medium text-sm text-slate-600">Check-in QR code</p>
         {qrUrl && <img src={qrUrl} alt="Check-in QR code" className="mx-auto" />}
         <p className="text-[10px] text-slate-400 italic whitespace-nowrap">
-          made by meedev _hmd.dtl@gmail.com(08067265806)
+          built by meeddev@gmail.com(08067265806)
         </p>
       </div>
 
