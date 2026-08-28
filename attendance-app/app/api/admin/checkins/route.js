@@ -16,14 +16,15 @@ export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const date = searchParams.get("date") || todayInLagos();
 
-  const { data, error } = await supabaseAdmin
+  // Not using .order() here - unreliable on this project. Sort in JS instead.
+  const { data: rawData, error } = await supabaseAdmin
     .from("attendance")
     .select("checkin_time, lat, lng, teachers(name)")
-    .eq("checkin_date", date)
-    .order("checkin_time", { ascending: true });
+    .eq("checkin_date", date);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  const data = [...rawData].sort((a, b) => new Date(a.checkin_time) - new Date(b.checkin_time));
   const rows = data.map((row) => ({
     name: row.teachers?.name || "Unknown",
     time: formatTimeInLagos(row.checkin_time),

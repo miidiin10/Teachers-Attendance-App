@@ -10,15 +10,16 @@ export async function GET(req) {
 
   if (type === "daily") {
     const date = searchParams.get("date") || todayInLagos();
+    // Not using .order() here - unreliable on this project. Sort in JS instead.
     const { data, error } = await supabaseAdmin
       .from("attendance")
       .select("checkin_time, teachers(name)")
-      .eq("checkin_date", date)
-      .order("checkin_time", { ascending: true });
+      .eq("checkin_date", date);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    const rows = data.map((row, i) => ({
+    const sortedData = [...data].sort((a, b) => new Date(a.checkin_time) - new Date(b.checkin_time));
+    const rows = sortedData.map((row, i) => ({
       rank: i + 1,
       name: row.teachers?.name || "Unknown",
       time: formatTimeInLagos(row.checkin_time),
@@ -28,14 +29,16 @@ export async function GET(req) {
 
   if (type === "monthly") {
     const month = searchParams.get("month") || currentMonthInLagos();
-    const { data, error } = await supabaseAdmin
+    // Not using .order() here either, for the same reason.
+    const { data: rawData, error } = await supabaseAdmin
       .from("attendance")
       .select("checkin_date, checkin_time, teacher_id, teachers(name)")
       .gte("checkin_date", `${month}-01`)
-      .lt("checkin_date", nextMonthStart(month))
-      .order("checkin_time", { ascending: true });
+      .lt("checkin_date", nextMonthStart(month));
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    const data = [...rawData].sort((a, b) => new Date(a.checkin_time) - new Date(b.checkin_time));
 
     // Group by day to find each day's #1 earliest teacher, then tally.
     const byDay = {};

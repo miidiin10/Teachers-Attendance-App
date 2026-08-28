@@ -23,19 +23,8 @@ export async function GET() {
 
   const sorted = [...data].sort((a, b) => a.name.localeCompare(b.name));
 
-  // TEMPORARY diagnostics - remove once confirmed fixed.
-  const { count: totalCount } = await supabaseAdmin
-    .from("teachers")
-    .select("id", { count: "exact", head: true });
-
   return NextResponse.json(
-    {
-      teachers: sorted,
-      _debug: {
-        totalTeachersInTable: totalCount,
-        rowsActuallyReturned: sorted.length,
-      },
-    },
+    { teachers: sorted },
     { headers: { "Cache-Control": "no-store, max-age=0" } }
   );
 }

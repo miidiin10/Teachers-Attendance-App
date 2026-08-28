@@ -10,12 +10,14 @@ function checkAdmin(req) {
 
 export async function GET(req) {
   if (!checkAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // Not using .order() here - it has caused unreliable/incomplete results
+  // on this project. Sorting in JS after the fact avoids it.
   const { data, error } = await supabaseAdmin
     .from("teachers")
-    .select("id, name, pin, active, failed_attempts, locked_until, created_at")
-    .order("created_at", { ascending: true });
+    .select("id, name, pin, active, failed_attempts, locked_until, created_at");
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ teachers: data });
+  const sorted = [...data].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  return NextResponse.json({ teachers: sorted });
 }
 
 export async function POST(req) {
