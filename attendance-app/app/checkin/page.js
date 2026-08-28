@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { fetchFresh } from "../../lib/fetchFresh";
 
 export default function CheckinPage() {
   const [teachers, setTeachers] = useState([]);
@@ -13,7 +14,7 @@ export default function CheckinPage() {
   const [deviceId, setDeviceId] = useState(null);
 
   useEffect(() => {
-    fetch("/api/teachers/public", { cache: "no-store" })
+    fetchFresh("/api/teachers/public")
       .then((r) => r.json())
       .then((d) => setTeachers(d.teachers || []));
 

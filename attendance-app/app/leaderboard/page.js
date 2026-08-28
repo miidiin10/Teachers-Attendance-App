@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { fetchFresh } from "../../lib/fetchFresh";
 
 export default function LeaderboardPage() {
   const [tab, setTab] = useState("daily");
@@ -7,8 +8,8 @@ export default function LeaderboardPage() {
   const [monthly, setMonthly] = useState(null);
 
   useEffect(() => {
-    fetch("/api/leaderboard?type=daily").then((r) => r.json()).then(setDaily);
-    fetch("/api/leaderboard?type=monthly").then((r) => r.json()).then(setMonthly);
+    fetchFresh("/api/leaderboard?type=daily").then((r) => r.json()).then(setDaily);
+    fetchFresh("/api/leaderboard?type=monthly").then((r) => r.json()).then(setMonthly);
   }, []);
 
   return (

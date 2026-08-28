@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import QRCode from "qrcode";
+import { fetchFresh } from "../../lib/fetchFresh";
 
 export default function AdminPage() {
   const [pw, setPw] = useState("");
@@ -16,7 +17,7 @@ export default function AdminPage() {
   async function login(e) {
     e.preventDefault();
     setError("");
-    const res = await fetch("/api/teachers", { headers: { "x-admin-password": pw } });
+    const res = await fetchFresh("/api/teachers", { headers: { "x-admin-password": pw } });
     if (res.ok) {
       setAuthed(true);
       const data = await res.json();
@@ -32,7 +33,7 @@ export default function AdminPage() {
   }
 
   async function loadCheckins(password) {
-    const res = await fetch("/api/admin/checkins", { headers: { "x-admin-password": password } });
+    const res = await fetchFresh("/api/admin/checkins", { headers: { "x-admin-password": password } });
     if (res.ok) {
       const data = await res.json();
       setCheckins(data.rows);
@@ -40,7 +41,7 @@ export default function AdminPage() {
   }
 
   async function loadQr(password) {
-    const res = await fetch("/api/admin/checkin-link", { headers: { "x-admin-password": password } });
+    const res = await fetchFresh("/api/admin/checkin-link", { headers: { "x-admin-password": password } });
     if (res.ok) {
       const { url } = await res.json();
       const dataUrl = await QRCode.toDataURL(url, { width: 240 });
@@ -49,7 +50,7 @@ export default function AdminPage() {
   }
 
   async function refresh() {
-    const res = await fetch("/api/teachers", { headers: { "x-admin-password": pw } });
+    const res = await fetchFresh("/api/teachers", { headers: { "x-admin-password": pw } });
     const data = await res.json();
     setTeachers(data.teachers);
   }
