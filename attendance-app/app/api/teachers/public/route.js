@@ -10,33 +10,30 @@ export const dynamic = "force-dynamic";
 // Public endpoint used by the /checkin page - only exposes id + name,
 // never the PIN.
 export async function GET() {
+  // Deliberately NOT using .order() here - for reasons still under
+  // investigation, adding .order("name") to this specific query was
+  // causing far fewer rows to come back than actually exist. Sorting in
+  // JS after the fact sidesteps it entirely.
   const { data, error } = await supabaseAdmin
     .from("teachers")
     .select("id, name")
-    .eq("active", true)
-    .order("name", { ascending: true });
+    .eq("active", true);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // TEMPORARY diagnostics - remove once the missing-teachers issue is
-  // resolved. Shows exactly what Supabase returns at each stage so we can
-  // see server-side reality directly in the browser, no log access needed.
+  const sorted = [...data].sort((a, b) => a.name.localeCompare(b.name));
+
+  // TEMPORARY diagnostics - remove once confirmed fixed.
   const { count: totalCount } = await supabaseAdmin
     .from("teachers")
     .select("id", { count: "exact", head: true });
-  const { count: activeCount } = await supabaseAdmin
-    .from("teachers")
-    .select("id", { count: "exact", head: true })
-    .eq("active", true);
 
   return NextResponse.json(
     {
-      teachers: data,
+      teachers: sorted,
       _debug: {
         totalTeachersInTable: totalCount,
-        activeTeachersInTable: activeCount,
-        rowsActuallyReturned: data.length,
-        supabaseUrlHost: (process.env.SUPABASE_URL || "").replace(/^https?:\/\//, "").split(".")[0],
+        rowsActuallyReturned: sorted.length,
       },
     },
     { headers: { "Cache-Control": "no-store, max-age=0" } }
