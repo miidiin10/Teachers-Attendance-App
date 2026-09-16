@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { fetchFresh } from "../../lib/fetchFresh";
 
 export default function CheckinPage() {
   const [teachers, setTeachers] = useState([]);
@@ -14,7 +13,7 @@ export default function CheckinPage() {
   const [deviceId, setDeviceId] = useState(null);
 
   useEffect(() => {
-    fetchFresh("/api/teachers/public")
+    fetch("/api/teachers/public")
       .then((r) => r.json())
       .then((d) => setTeachers(d.teachers || []));
 
@@ -22,7 +21,10 @@ export default function CheckinPage() {
       navigator.geolocation.getCurrentPosition(
         (pos) => setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
         () => setLocError("Location unavailable - allow location access if check-in fails."),
-        { enableHighAccuracy: true, timeout: 8000 }
+        // maximumAge: 0 forces a fresh reading rather than reusing a stale
+        // cached position (which can be from a completely different place).
+        // Longer timeout gives weaker-signal phones time to get a proper fix.
+        { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
       );
     }
 

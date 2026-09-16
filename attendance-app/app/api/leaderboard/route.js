@@ -24,7 +24,10 @@ export async function GET(req) {
       name: row.teachers?.name || "Unknown",
       time: formatTimeInLagos(row.checkin_time),
     }));
-    return NextResponse.json({ date, rows });
+    return NextResponse.json(
+      { date, rows },
+      { headers: { "Cache-Control": "public, s-maxage=20, stale-while-revalidate=60" } }
+    );
   }
 
   if (type === "monthly") {
@@ -76,7 +79,10 @@ export async function GET(req) {
         avgTime: minutesToClock(s.avgMinutes),
       }));
 
-    return NextResponse.json({ month, rows: ranked, winner: ranked[0] || null });
+    return NextResponse.json(
+      { month, rows: ranked, winner: ranked[0] || null },
+      { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=180" } }
+    );
   }
 
   return NextResponse.json({ error: "Unknown type" }, { status: 400 });

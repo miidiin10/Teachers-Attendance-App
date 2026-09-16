@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 import { todayInLagos, formatTimeInLagos, parseHHMM, currentMinutesInLagos } from "../../../lib/dates";
 import { getSchoolZones, isWithinAnyZone } from "../../../lib/geofence";
+import { distanceMeters } from "../../../lib/geo";
 
 const LOCKOUT_ATTEMPTS = Number(process.env.PIN_LOCKOUT_ATTEMPTS) || 5;
 const LOCKOUT_MINUTES = Number(process.env.PIN_LOCKOUT_MINUTES) || 10;
@@ -77,8 +78,17 @@ export async function POST(req) {
       }
       const result = isWithinAnyZone(lat, lng, zones);
       if (!result.ok) {
+        // Include the measured distance so a failing phone tells us
+        // exactly how far off it thinks it is - a huge number means bad
+        // GPS or wrong configured coordinates, a number just over the
+        // radius means the radius simply needs widening.
+        const nearest = Math.round(
+          Math.min(...zones.map((z) => distanceMeters(z.lat, z.lng, lat, lng)))
+        );
         return NextResponse.json(
-          { error: "You don't appear to be at an approved check-in location." },
+          {
+            error: `You don't appear to be at an approved check-in location. (Measured ${nearest}m away from the nearest approved zone.)`,
+          },
           { status: 403 }
         );
       }
