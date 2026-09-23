@@ -12,6 +12,9 @@ export default function Home() {
         <Link href="/leaderboard" className="border border-slate-300 rounded-xl py-3 font-medium">
           View Leaderboard
         </Link>
+        <Link href="/records" className="border border-slate-300 rounded-xl py-3 font-medium">
+          Daily Record
+        </Link>
       </div>
     </main>
   );
