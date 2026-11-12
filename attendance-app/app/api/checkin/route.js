@@ -1,9 +1,11 @@
-export const dynamic = 'force-dynamic';
+
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 import { todayInLagos, formatTimeInLagos, parseHHMM, currentMinutesInLagos } from "../../../lib/dates";
 import { getSchoolZones, isWithinAnyZone } from "../../../lib/geofence";
 import { distanceMeters } from "../../../lib/geo";
+
+export const dynamic = 'force-dynamic';
 
 const LOCKOUT_ATTEMPTS = Number(process.env.PIN_LOCKOUT_ATTEMPTS) || 5;
 const LOCKOUT_MINUTES = Number(process.env.PIN_LOCKOUT_MINUTES) || 10;
