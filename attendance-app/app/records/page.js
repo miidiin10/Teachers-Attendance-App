@@ -5,7 +5,8 @@ export default function RecordsPage() {
   const [data, setData] = useState(null);
 
   useEffect(() => {
-    fetch("/api/records")
+    // 👇 Added { cache: "no-store" } to force fresh data every time
+    fetch("/api/records", { cache: "no-store" })
       .then((r) => r.json())
       .then(setData);
   }, []);
