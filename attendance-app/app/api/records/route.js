@@ -23,11 +23,12 @@ export async function GET(req) {
 
   const nextMonth = mon === 12 ? `${year + 1}-01-01` : `${year}-${String(mon + 1).padStart(2, "0")}-01`;
   
+    // TEMPORARY DEBUG: Fetching ALL records to see exactly what Supabase is returning
   const { data: attendanceRows, error: attErr } = await supabaseAdmin
     .from("attendance")
-    .select("teacher_id, checkin_date, checkin_time")
-    .gte("checkin_date", `${month}-01`)
-    .lt("checkin_date", nextMonth);
+    .select("*") // <-- Changed to "*" to see all columns
+    // .gte("checkin_date", `${month}-01`) // <-- Temporarily commented out
+    // .lt("checkin_date", nextMonth);     // <-- Temporarily commented out
     
   if (attErr) return NextResponse.json({ error: attErr.message }, { status: 500 });
 
