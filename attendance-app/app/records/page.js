@@ -5,12 +5,12 @@ export default function RecordsPage() {
   const [data, setData] = useState(null);
 
   useEffect(() => {
-    // 👇 Added { cache: "no-store" } to force fresh data every time
-    fetch("/api/records", { cache: "no-store" })
-      .then((r) => r.json())
-      .then(setData);
-  }, []);
-
+  const timestamp = new Date().getTime();
+  fetch(`/api/record?t=${timestamp}`, { cache: "no-store" })
+    .then((r) => r.json())
+    .then(setData);
+}, []);
+  
   if (!data) {
     return (
       <main className="pt-10">
