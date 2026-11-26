@@ -11,14 +11,33 @@ export async function GET(req) {
   if (type === "daily") {
     const date = searchParams.get("date") || todayInLagos();
     
-    const { data, error } = await supabaseAdmin
-      .from("attendance")
-      .select("checkin_time, teachers(name)")
-      .eq("checkin_date", date);
+    // 1. Fetch ALL attendance records in chunks of 1000
+    let rawData = [];
+    const pageSize = 1000;
+    for (let page = 0; ; page++) {
+      const from = page * pageSize;
+      const to = from + pageSize - 1;
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      const { data, error } = await supabaseAdmin
+        .from("attendance")
+        .select("checkin_date, checkin_time, teachers(name)") // Added checkin_date to the select!
+        .range(from, to);
 
-    const sortedData = [...(data || [])].sort((a, b) => new Date(a.checkin_time) - new Date(b.checkin_time));
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      if (!data || data.length === 0) break;
+
+      rawData = rawData.concat(data);
+      if (data.length < pageSize) break;
+      if (page > 50) break;
+    }
+
+    // 2. Filter in JavaScript (Bulletproof: ignores Supabase timestamp quirks)
+    const filteredData = rawData.filter(row => {
+      const dateStr = String(row.checkin_date).split("T")[0]; // Gets exactly "YYYY-MM-DD"
+      return dateStr === date; // Only keep today's date
+    });
+
+    const sortedData = [...filteredData].sort((a, b) => new Date(a.checkin_time) - new Date(b.checkin_time));
     const rows = sortedData.map((row, i) => ({
       rank: i + 1,
       name: row.teachers?.name || "Unknown",
@@ -34,7 +53,7 @@ export async function GET(req) {
   if (type === "monthly") {
     const month = searchParams.get("month") || currentMonthInLagos();
     
-    // 1. Fetch ALL attendance records in chunks of 1000 to bypass Supabase's limit
+    // 1. Fetch ALL attendance records in chunks of 1000
     let rawData = [];
     const pageSize = 1000;
     for (let page = 0; ; page++) {
@@ -50,8 +69,8 @@ export async function GET(req) {
       if (!data || data.length === 0) break;
 
       rawData = rawData.concat(data);
-      if (data.length < pageSize) break; // Last page reached
-      if (page > 50) break; // Safety stop
+      if (data.length < pageSize) break;
+      if (page > 50) break;
     }
 
     // 2. Filter in JavaScript to avoid Supabase timezone/date filtering bugs
@@ -69,9 +88,9 @@ export async function GET(req) {
       byDay[row.checkin_date].push(row);
     }
 
-    const stats = {}; // teacher_id -> { name, firstPlaceDays, daysPresent, totalMinutes }
-    for (const date of Object.keys(byDay)) {
-      const dayRows = byDay[date]; // already sorted by checkin_time
+    const stats = {}; 
+    for (const dateKey of Object.keys(byDay)) {
+      const dayRows = byDay[dateKey]; 
       dayRows.forEach((row, i) => {
         const id = row.teacher_id;
         if (!stats[id]) {
