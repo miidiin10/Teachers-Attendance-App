@@ -10,49 +10,87 @@ export async function GET(req) {
 
   if (type === "daily") {
     const date = searchParams.get("date") || todayInLagos();
-    // Not using .order() here - unreliable on this project. Sort in JS instead.
-    const { data, error } = await supabaseAdmin
-      .from("attendance")
-      .select("checkin_time, teachers(name)")
-      .eq("checkin_date", date);
+    
+    // 1. Fetch ALL attendance records in chunks of 1000
+    let rawData = [];
+    const pageSize = 1000;
+    for (let page = 0; ; page++) {
+      const from = page * pageSize;
+      const to = from + pageSize - 1;
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      const { data, error } = await supabaseAdmin
+        .from("attendance")
+        .select("checkin_date, checkin_time, teachers(name)") // Added checkin_date to the select!
+        .range(from, to);
 
-    const sortedData = [...data].sort((a, b) => new Date(a.checkin_time) - new Date(b.checkin_time));
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      if (!data || data.length === 0) break;
+
+      rawData = rawData.concat(data);
+      if (data.length < pageSize) break;
+      if (page > 50) break;
+    }
+
+    // 2. Filter in JavaScript (Bulletproof: ignores Supabase timestamp quirks)
+    const filteredData = rawData.filter(row => {
+      const dateStr = String(row.checkin_date).split("T")[0]; // Gets exactly "YYYY-MM-DD"
+      return dateStr === date; // Only keep today's date
+    });
+
+    const sortedData = [...filteredData].sort((a, b) => new Date(a.checkin_time) - new Date(b.checkin_time));
     const rows = sortedData.map((row, i) => ({
       rank: i + 1,
       name: row.teachers?.name || "Unknown",
       time: formatTimeInLagos(row.checkin_time),
     }));
+    
     return NextResponse.json(
       { date, rows },
-      { headers: { "Cache-Control": "public, s-maxage=20, stale-while-revalidate=60" } }
+      { headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" } }
     );
   }
 
   if (type === "monthly") {
     const month = searchParams.get("month") || currentMonthInLagos();
-    // Not using .order() here either, for the same reason.
-    const { data: rawData, error } = await supabaseAdmin
-      .from("attendance")
-      .select("checkin_date, checkin_time, teacher_id, teachers(name)")
-      .gte("checkin_date", `${month}-01`)
-      .lt("checkin_date", nextMonthStart(month));
+    
+    // 1. Fetch ALL attendance records in chunks of 1000
+    let rawData = [];
+    const pageSize = 1000;
+    for (let page = 0; ; page++) {
+      const from = page * pageSize;
+      const to = from + pageSize - 1;
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      const { data, error } = await supabaseAdmin
+        .from("attendance")
+        .select("checkin_date, checkin_time, teacher_id, teachers(name)")
+        .range(from, to);
 
-    const data = [...rawData].sort((a, b) => new Date(a.checkin_time) - new Date(b.checkin_time));
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      if (!data || data.length === 0) break;
 
-    // Group by day to find each day's #1 earliest teacher, then tally.
+      rawData = rawData.concat(data);
+      if (data.length < pageSize) break;
+      if (page > 50) break;
+    }
+
+    // 2. Filter in JavaScript to avoid Supabase timezone/date filtering bugs
+    const filteredData = rawData.filter(row => {
+      const dateStr = String(row.checkin_date).split("T")[0];
+      return dateStr.startsWith(month);
+    });
+
+    const data = [...filteredData].sort((a, b) => new Date(a.checkin_time) - new Date(b.checkin_time));
+
+    // 3. Group by day to find each day's #1 earliest teacher, then tally.
     const byDay = {};
     for (const row of data) {
       if (!byDay[row.checkin_date]) byDay[row.checkin_date] = [];
       byDay[row.checkin_date].push(row);
     }
 
-    const stats = {}; // teacher_id -> { name, firstPlaceDays, daysPresent, totalMinutes }
-    for (const date of Object.keys(byDay)) {
-      const dayRows = byDay[date]; // already sorted by checkin_time
+    const stats = {}; 
+    for (const dateKey of Object.keys(byDay)) {
+      const dayRows = byDay[dateKey]; 
       dayRows.forEach((row, i) => {
         const id = row.teacher_id;
         if (!stats[id]) {
@@ -81,17 +119,11 @@ export async function GET(req) {
 
     return NextResponse.json(
       { month, rows: ranked, winner: ranked[0] || null },
-      { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=180" } }
+      { headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" } }
     );
   }
 
   return NextResponse.json({ error: "Unknown type" }, { status: 400 });
-}
-
-function nextMonthStart(month) {
-  const [y, m] = month.split("-").map(Number);
-  const next = m === 12 ? `${y + 1}-01-01` : `${y}-${String(m + 1).padStart(2, "0")}-01`;
-  return next;
 }
 
 function minutesToClock(mins) {
