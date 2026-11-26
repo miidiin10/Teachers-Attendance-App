@@ -12,7 +12,8 @@ export default function RecordsPage() {
 // }, []);
 
   useEffect(() => {
-  fetch("/api/records", { cache: "no-store" })
+  const timestamp = new Date().getTime();
+  fetch(`/api/records?t=${timestamp}`, { cache: "no-store" })
     .then((r) => r.json())
     .then(setData);
 }, []);
