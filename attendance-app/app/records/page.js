@@ -4,9 +4,15 @@ import { useEffect, useState } from "react";
 export default function RecordsPage() {
   const [data, setData] = useState(null);
 
+//   useEffect(() => {
+//   const timestamp = new Date().getTime();
+//   fetch(`/api/records?t=${timestamp}`, { cache: "no-store" })
+//     .then((r) => r.json())
+//     .then(setData);
+// }, []);
+
   useEffect(() => {
-  const timestamp = new Date().getTime();
-  fetch(`/api/records?t=${timestamp}`, { cache: "no-store" })
+  fetch("/api/records", { cache: "no-store" })
     .then((r) => r.json())
     .then(setData);
 }, []);
