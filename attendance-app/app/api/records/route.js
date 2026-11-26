@@ -47,14 +47,27 @@ export async function GET(req) {
       }
     }
 
-    return NextResponse.json(
-      { month, daysInMonth, teachers, records },
-      { 
-        headers: { 
-          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-        } 
-      }
-    );
+    // return NextResponse.json(
+    //   { month, daysInMonth, teachers, records },
+    //   { 
+    //     headers: { 
+    //       'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+    //     } 
+    //   }
+    // );
+
+return NextResponse.json(
+  { month, daysInMonth, teachers, records },
+  { 
+    headers: { 
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      'Surrogate-Control': 'no-store'
+    } 
+  }
+);
+    
   } catch (err) {
     console.error("API route crashed:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
