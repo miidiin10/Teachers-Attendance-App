@@ -3,21 +3,25 @@ import { useEffect, useState } from "react";
 
 export default function RecordsPage() {
   const [data, setData] = useState(null);
-
-//   useEffect(() => {
-//   const timestamp = new Date().getTime();
-//   fetch(`/api/records?t=${timestamp}`, { cache: "no-store" })
-//     .then((r) => r.json())
-//     .then(setData);
-// }, []);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-  const timestamp = new Date().getTime();
-  fetch(`/api/records?t=${timestamp}`, { cache: "no-store" })
-    .then((r) => r.json())
-    .then(setData);
-}, []);
-  
+    const timestamp = new Date().getTime();
+    fetch(`/api/records?t=${timestamp}`, { 
+      cache: "no-store",
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        console.log("Records API response:", d); // 👈 Add this for debugging
+        setData(d);
+      })
+      .catch(err => console.error("Fetch error:", err));
+  }, [refreshKey]);
+
   if (!data) {
     return (
       <main className="pt-10">
@@ -36,6 +40,16 @@ export default function RecordsPage() {
     <main className="pt-10 space-y-4 pb-10">
       <h1 className="text-xl font-bold text-center">Daily Record</h1>
       <p className="text-center text-sm text-slate-500">{monthLabel}</p>
+      
+      {/* 👇 Add this button to manually refresh */}
+      <div className="text-center">
+        <button 
+          onClick={() => setRefreshKey(k => k + 1)}
+          className="text-xs bg-slate-200 px-3 py-1 rounded-full hover:bg-slate-300"
+        >
+          🔄 Refresh data
+        </button>
+      </div>
 
       {data.teachers.length === 0 ? (
         <p className="text-center text-sm text-slate-400 pt-4">No teachers added yet.</p>
